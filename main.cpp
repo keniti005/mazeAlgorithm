@@ -15,6 +15,24 @@ namespace
 	int array[ROW][COL] = { 0 };
 }
 
+//100がスタート地点
+//101がゴール地点
+/*
+array[11][11] =
+{
+	{  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1},
+	{  1,100,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
+	{  1,  0,  0,  0,  0,  0,  0,  0,  0,101,  1},
+	{  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1}
+};
+*/
 constexpr long long INF = (1LL << 60);
 
 struct Edge
@@ -50,14 +68,40 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	SetDrawScreen(DX_SCREEN_BACK);
 	srand((unsigned int)time(NULL));
-	createMaze();
-	array[1][1] = 10;
-	array[ROW - 2][COL - 2] = 11;
+	//createMaze();
+	Graph graph;
+
+	array[1][1] = 100;
+	array[ROW - 2][COL - 2] = 101;
+	bool isKey = false;
+	//外壁作成
+	for (int i = 0;i < ROW; i++)
+	{
+		for (int j = 0;j < COL; j++)
+		{
+			if (i == 0 || j == 0 || i == ROW - 1 || j == COL - 1)
+			{
+				array[i][j] = 1;
+			}
+		}
+	}
 
 	while (true)
 	{
 		ClearDrawScreen();
-
+		//押したら１探索
+		if (CheckHitKey(KEY_INPUT_SPACE))
+		{
+			if (!(isKey))
+			{
+				//Dijkstra();
+			}
+			isKey = true;
+		}
+		else
+		{
+			isKey = false;
+		}
 		for (int i = 0; i < ROW; i++)
 		{
 			for (int j = 0; j < COL; j++)
@@ -74,20 +118,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 255, 0), TRUE);
 				}
-				if (array[i][j] == 10)//スタート地点
+				if (array[i][j] == 100)//スタート地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 0, 255), TRUE);
 				}
-				if (array[i][j] == 11)//ゴール地点
+				if (array[i][j] == 101)//ゴール地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 255, 255), TRUE);
 				}
+				if (array[i][j] == 5)//探索した後の床
+				{
+					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(128, 128, 128), TRUE);
+				}
 			}
-		}
-
-		if (CheckHitKey(KEY_INPUT_SPACE))
-		{
-
 		}
 
 		ScreenFlip();
