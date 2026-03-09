@@ -4,6 +4,7 @@
 #include <vector>
 #include <utility>
 #include <queue>
+
 namespace
 {
 	const int WIN_WIDTH = 1024;
@@ -12,6 +13,7 @@ namespace
 	const int COL = 11;
 	const int BOX_X = 32;
 	const int BOX_Y = 32;
+	//std::vector<std::vector<long>> array;
 	int array[ROW][COL] = { 0 };
 }
 
@@ -33,6 +35,7 @@ array[11][11] =
 	{  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1}
 };
 */
+
 constexpr long long INF = (1LL << 60);
 
 struct Edge
@@ -47,7 +50,7 @@ struct Edge
 using Graph = std::vector<std::vector<Edge>>;
 using Pair = std::pair<long long, int>;//{distance,form}
 void setWall(int r, int c, bool a);
-void createMaze();
+void createMaze();//ñ_ì|Çµñ@
 void Dijkstra(const Graph& graph, std::vector<long long>& distances, int startIndex);
 void Dijkstra(const Graph& graph, std::vector<long long>& distances, int startIndex, int targetIndex, std::vector<int>& path);
 
@@ -68,9 +71,21 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	SetDrawScreen(DX_SCREEN_BACK);
 	srand((unsigned int)time(NULL));
-	//createMaze();
-	Graph graph;
+	createMaze();
+	//int V, E, r;
+	//V = 11;
+	//E = 11;
+	//r = 100;
 
+	//Graph graph(V);
+	//while (E--)
+	//{
+	//	int s, t, d;
+
+	//	graph[s].push_back({ t, d });
+	//}
+
+	//std::vector<long long> distances(V, INF);
 	array[1][1] = 100;
 	array[ROW - 2][COL - 2] = 101;
 	bool isKey = false;
@@ -89,12 +104,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	while (true)
 	{
 		ClearDrawScreen();
+
 		//âüÇµÇΩÇÁÇPíTçı
 		if (CheckHitKey(KEY_INPUT_SPACE))
 		{
 			if (!(isKey))
 			{
-				//Dijkstra();
+				//Dijkstra(graph, distances, r);
 			}
 			isKey = true;
 		}
