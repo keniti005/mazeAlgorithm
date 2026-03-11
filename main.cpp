@@ -13,8 +13,10 @@ namespace
 	const int COL = 11;
 	const int BOX_X = 32;
 	const int BOX_Y = 32;
+	const int DX[4] = { 1,0,1,0 };
+	const int DY[4] = { 0,1,0,1 };
 	//std::vector<std::vector<long>> array;
-	int array[ROW][COL] = { 0 };
+	int array[ROW][COL] = {};
 }
 
 //100がスタート地点
@@ -22,17 +24,17 @@ namespace
 /*
 array[11][11] =
 {
-	{  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1},
-	{  1,100,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1},
-	{  1,  0,  0,  0,  0,  0,  0,  0,  0,101,  1},
-	{  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1}
+	{101,101,101,101,101,101,101,101,101,101,101},
+	{101,200,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,  0,101},
+	{101,  0,  0,  0,  0,  0,  0,  0,  0,201,101},
+	{101,101,101,101,101,101,101,101,101,101,101}
 };
 */
 
@@ -53,6 +55,7 @@ void setWall(int r, int c, bool a);
 void createMaze();//棒倒し法
 void Dijkstra(const Graph& graph, std::vector<long long>& distances, int startIndex);
 void Dijkstra(const Graph& graph, std::vector<long long>& distances, int startIndex, int targetIndex, std::vector<int>& path);
+void BFS();
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -68,26 +71,19 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	{
 		DxLib_End();
 	}
+	for (int i = 0; i < ROW; i++)
+	{
+		for (int j = 0; j < COL; j++)
+		{
+			array[i][j] = -1;
+		}
+	}
 
 	SetDrawScreen(DX_SCREEN_BACK);
 	srand((unsigned int)time(NULL));
-	createMaze();
-	//int V, E, r;
-	//V = 11;
-	//E = 11;
-	//r = 100;
-
-	//Graph graph(V);
-	//while (E--)
-	//{
-	//	int s, t, d;
-
-	//	graph[s].push_back({ t, d });
-	//}
-
-	//std::vector<long long> distances(V, INF);
-	array[1][1] = 100;
-	array[ROW - 2][COL - 2] = 101;
+	//createMaze();
+	array[1][1] = 0;//スタート地点
+	array[ROW - 2][COL - 2] = 201;//ゴール地点
 	bool isKey = false;
 	//外壁作成
 	for (int i = 0;i < ROW; i++)
@@ -96,16 +92,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		{
 			if (i == 0 || j == 0 || i == ROW - 1 || j == COL - 1)
 			{
-				array[i][j] = 1;
+				array[i][j] = 101;
 			}
 		}
 	}
 
 	while (true)
 	{
-		ClearDrawScreen();
+		//ClearDrawScreen();
 
-		//押したら１探索
+		//押したら探索
 		if (CheckHitKey(KEY_INPUT_SPACE))
 		{
 			if (!(isKey))
@@ -114,31 +110,36 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 			}
 			isKey = true;
 		}
-		else
+		//else
+		//{
+		//	isKey = false;
+		//}
+		if (isKey == true)
 		{
-			isKey = false;
+			BFS();
 		}
+
 		for (int i = 0; i < ROW; i++)
 		{
 			for (int j = 0; j < COL; j++)
 			{
-				if (array[i][j] == 1)//壁
+				if (array[i][j] == 101)//壁
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 255, 255), TRUE);
 				}
-				if (array[i][j] == 2)//柱
+				if (array[i][j] == 102)//柱
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 0, 0), TRUE);
 				}
-				if (array[i][j] == 3)//柱から伸びた壁
+				if (array[i][j] == 103)//柱から伸びた壁
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 255, 0), TRUE);
 				}
-				if (array[i][j] == 100)//スタート地点
+				if (array[i][j] == 0)//スタート地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 0, 255), TRUE);
 				}
-				if (array[i][j] == 101)//ゴール地点
+				if (array[i][j] == 201)//ゴール地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 255, 255), TRUE);
 				}
@@ -169,7 +170,7 @@ void createMaze()
 		{
 			if (i == 0 || j == 0 || i == ROW - 1 || j == COL - 1)
 			{
-				array[i][j] = 1;
+				array[i][j] = 101;
 			}
 		}
 	}
@@ -178,7 +179,7 @@ void createMaze()
 	{
 		for (int j = 0;j < COL;j++)
 		{
-			if (array[i][j] == 1)
+			if (array[i][j] == 101)
 			{
 				continue;
 			}
@@ -186,7 +187,7 @@ void createMaze()
 			int ty = j % 2;
 			if (tx == 0 && ty == 0)
 			{
-				array[i][j] = 2;
+				array[i][j] = 102;
 			}
 		}
 	}
@@ -195,7 +196,7 @@ void createMaze()
 	{
 		for (int j = 2; j < COL; j++)
 		{
-			if (array[i][j] == 2)
+			if (array[i][j] == 102)
 			{
 				if (i == 2)
 				{
@@ -224,19 +225,60 @@ void setWall(int r, int c, bool a)
 	int rdm = (rand() % max);
 	if (rdm == 0)
 	{
-		array[r][c - 1] = 3;
+		array[r][c - 1] = 103;
 	}
 	if (rdm == 1)
 	{
-		array[r][c + 1] = 3;
+		array[r][c + 1] = 103;
 	}
 	if (rdm == 2)
 	{
-		array[r + 1][c] = 3;
+		array[r + 1][c] = 103;
 	}
 	if (rdm == 3)
 	{
-		array[r - 1][c] = 3;
+		array[r - 1][c] = 103;
+	}
+}
+
+void BFS()
+{
+	std::vector<std::vector<int>> dist(COL, std::vector<int>(ROW, -1));
+	dist[1][1] = 200;
+	dist[ROW - 2][COL - 2] = 201;
+
+	std::vector<std::vector<int>>prev_x(COL, std::vector<int>(ROW, -1));
+	std::vector<std::vector<int>>prev_y(COL, std::vector<int>(ROW, -1));
+
+	std::queue<std::pair<int, int>> que;
+	que.push(std::make_pair(1, 1));
+
+	while (!que.empty())
+	{
+		std::pair<int, int>current_pos = que.front();//キューの先頭を見る
+		int x = current_pos.first;
+		int y = current_pos.second;
+		que.pop();
+
+		//隣接頂点を探索
+		for (int direction = 0; direction < 4; direction++)
+		{
+			int next_x = x + DX[direction];
+			int next_y = y + DY[direction];
+			if (next_x < 0 || next_x >= COL || next_y < 0 || next_y >= ROW)
+			{
+ 				continue;
+			}
+			if (array[next_x][next_y] == 101 || array[next_x][next_y] == 102 || array[next_x][next_y] == 103)
+			{
+				continue;
+			}
+			if (dist[next_x][next_y] == -1)
+			{
+				que.push(std::make_pair(next_x, next_y));
+				dist[next_x][next_y] = dist[x][y] + 1;
+			}
+		}
 	}
 }
 
