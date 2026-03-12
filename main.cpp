@@ -11,12 +11,21 @@ namespace
 	const int WIN_HEIGHT = 768;
 	const int ROW = 11;
 	const int COL = 11;
-	const int BOX_X = 32;
-	const int BOX_Y = 32;
-	const int DX[4] = { 1,0,1,0 };
-	const int DY[4] = { 0,1,0,1 };
+	const int BOX_X = 64;
+	const int BOX_Y = 64;
+	const int DX[4] = { 1,0,-1,0 };
+	const int DY[4] = { 0,1,0,-1 };
+	int sx, sy, gx, gy = 0;
 	//std::vector<std::vector<long>> array;
-	int array[ROW][COL] = {};
+	//int array[ROW][COL] = {};
+	//int root[ROW][COL] = {};
+	int pathIdxNow = 0;
+	std::vector<std::pair<int, int>> route;//移動経路の保存
+	std::vector<std::vector<int>>array(COL, std::vector<int>(ROW, -1));
+	//std::vector<std::vector<int>>root(COL, std::vector<int>(ROW, -1));
+	std::vector<std::vector<int>> dist(COL, std::vector<int>(ROW, -1));//-1に初期化（未探索）
+	std::vector<std::vector<int>>prev_x(COL, std::vector<int>(ROW, -1));
+	std::vector<std::vector<int>>prev_y(COL, std::vector<int>(ROW, -1));
 }
 
 //100がスタート地点
@@ -71,20 +80,20 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	{
 		DxLib_End();
 	}
-	for (int i = 0; i < ROW; i++)
-	{
-		for (int j = 0; j < COL; j++)
-		{
-			array[i][j] = -1;
-		}
-	}
+	//array[ROW][COL];//盤面
+	array[1][1] = 0;//スタート地点
 
 	SetDrawScreen(DX_SCREEN_BACK);
 	srand((unsigned int)time(NULL));
-	//createMaze();
-	array[1][1] = 0;//スタート地点
+	createMaze();//迷路作成
 	array[ROW - 2][COL - 2] = 201;//ゴール地点
 	bool isKey = false;
+	bool isBFS = false;
+	bool isGoal = false;
+	//歩数
+	int runX = 1;
+	int runY = 1;
+
 	//外壁作成
 	for (int i = 0;i < ROW; i++)
 	{
@@ -97,57 +106,77 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		}
 	}
 
+
 	while (true)
 	{
-		//ClearDrawScreen();
+		ClearDrawScreen();
 
 		//押したら探索
-		if (CheckHitKey(KEY_INPUT_SPACE))
+		if (CheckHitKey(KEY_INPUT_S))
 		{
-			if (!(isKey))
-			{
-				//Dijkstra(graph, distances, r);
-			}
-			isKey = true;
+			isBFS = true;
 		}
-		//else
-		//{
-		//	isKey = false;
-		//}
-		if (isKey == true)
+
+		if (isBFS == true)
 		{
 			BFS();
 		}
+		if (CheckHitKey(KEY_INPUT_SPACE) && isBFS == true)
+		{
+			if (!(isKey))
+			{
+				if (!(isGoal))
+				{
+					pathIdxNow++;
+					runX = route[pathIdxNow].first;
+					runY = route[pathIdxNow].second;
+				}
+			}
+			isKey = true;
+		}
+		else
+		{
+			isKey = false;
+		}
 
+		int searchX = 0, searchY = 0;
 		for (int i = 0; i < ROW; i++)
 		{
 			for (int j = 0; j < COL; j++)
 			{
-				if (array[i][j] == 101)//壁
+				if (array[j][i] == 101)//壁
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 255, 255), TRUE);
 				}
-				if (array[i][j] == 102)//柱
+				if (array[j][i] == 102)//柱
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 0, 0), TRUE);
 				}
-				if (array[i][j] == 103)//柱から伸びた壁
+				if (array[j][i] == 103)//柱から伸びた壁
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(255, 255, 0), TRUE);
 				}
-				if (array[i][j] == 0)//スタート地点
+				if (array[j][i] == 0)//スタート地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 0, 255), TRUE);
 				}
-				if (array[i][j] == 201)//ゴール地点
+				if (array[j][i] == 201)//ゴール地点
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(0, 255, 255), TRUE);
 				}
-				if (array[i][j] == 5)//探索した後の床
+				if (array[j][i] == 105)//探索した後の床
 				{
 					DrawBox(i * BOX_X, j * BOX_Y, BOX_X * (i + 1), BOX_Y * (j + 1), GetColor(128, 128, 128), TRUE);
 				}
+				if (j == runX && i == runY)
+				{
+					LoadGraphScreen(i * BOX_X, j * BOX_Y, "sun.png", TRUE);
+				}
 			}
+		}
+		if (array[runY][runX] == array[gx][gy])
+		{
+			isGoal = true;
 		}
 
 		ScreenFlip();
@@ -243,15 +272,32 @@ void setWall(int r, int c, bool a)
 
 void BFS()
 {
-	std::vector<std::vector<int>> dist(COL, std::vector<int>(ROW, -1));
-	dist[1][1] = 200;
-	dist[ROW - 2][COL - 2] = 201;
+	for (int i = 0;i < ROW; i++)
+	{
+		for (int j = 0; j < COL; j++)
+		{
+			if (array[i][j] == 0)
+			{
+				sx = i;
+				sy = j;
+			}
+			if (array[i][j] == 201)
+			{
+				gx = i;
+				gy = j;
+			}
+		}
+	}
+	std::vector<std::vector<int>> dist(COL, std::vector<int>(ROW, -1));//-1に初期化（未探索）
+
+	dist[sx][sy] = 0;//スタート地点
+	//dist[ROW - 2][COL - 2] = 201;//ゴール地点
 
 	std::vector<std::vector<int>>prev_x(COL, std::vector<int>(ROW, -1));
 	std::vector<std::vector<int>>prev_y(COL, std::vector<int>(ROW, -1));
 
 	std::queue<std::pair<int, int>> que;
-	que.push(std::make_pair(1, 1));
+	que.push(std::make_pair(sx, sy));
 
 	while (!que.empty())
 	{
@@ -267,7 +313,7 @@ void BFS()
 			int next_y = y + DY[direction];
 			if (next_x < 0 || next_x >= COL || next_y < 0 || next_y >= ROW)
 			{
- 				continue;
+				continue;
 			}
 			if (array[next_x][next_y] == 101 || array[next_x][next_y] == 102 || array[next_x][next_y] == 103)
 			{
@@ -277,9 +323,28 @@ void BFS()
 			{
 				que.push(std::make_pair(next_x, next_y));
 				dist[next_x][next_y] = dist[x][y] + 1;
+				prev_x[next_x][next_y] = x;
+				prev_y[next_x][next_y] = y;
 			}
 		}
 	}
+	//ゴール遅延
+	int x = gx, y = gy;
+	while (x != -1 && y != -1)
+	{
+		array[x][y] = 105;
+		route.push_back({x,y});
+
+		int px = prev_x[x][y];
+		int py = prev_y[x][y];
+		x = px, y = py;
+	}
+
+	//スタート地点から進むように反転
+	std::reverse(route.begin(), route.end());
+
+	array[sx][sy] = 0;
+	array[gx][gy] = 201;
 }
 
 void Dijkstra(const Graph& graph, std::vector<long long>& distances, int startIndex)
