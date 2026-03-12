@@ -80,12 +80,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	{
 		DxLib_End();
 	}
-	//array[ROW][COL];//盤面
 	array[1][1] = 0;//スタート地点
 
 	SetDrawScreen(DX_SCREEN_BACK);
 	srand((unsigned int)time(NULL));
-	createMaze();//迷路作成
+	createMaze();//迷路作成(棒倒し法)
 	array[ROW - 2][COL - 2] = 201;//ゴール地点
 	bool isKey = false;
 	bool isBFS = false;
@@ -293,11 +292,12 @@ void BFS()
 	dist[sx][sy] = 0;//スタート地点
 	//dist[ROW - 2][COL - 2] = 201;//ゴール地点
 
+
 	std::vector<std::vector<int>>prev_x(COL, std::vector<int>(ROW, -1));
 	std::vector<std::vector<int>>prev_y(COL, std::vector<int>(ROW, -1));
 
-	std::queue<std::pair<int, int>> que;
-	que.push(std::make_pair(sx, sy));
+	std::queue<std::pair<int, int>> que;//一度見た頂点の撃ちまだ訪れていない頂点を表すキュー
+	que.push(std::make_pair(sx, sy));//スタート地点
 
 	while (!que.empty())
 	{
@@ -315,7 +315,7 @@ void BFS()
 			{
 				continue;
 			}
-			if (array[next_x][next_y] == 101 || array[next_x][next_y] == 102 || array[next_x][next_y] == 103)
+			if (array[next_x][next_y] == 101 || array[next_x][next_y] == 102 || array[next_x][next_y] == 103)//道として通れない地点を判断
 			{
 				continue;
 			}
@@ -328,7 +328,7 @@ void BFS()
 			}
 		}
 	}
-	//ゴール遅延
+	//ゴールにいたるまでの最短経路を作る
 	int x = gx, y = gy;
 	while (x != -1 && y != -1)
 	{
